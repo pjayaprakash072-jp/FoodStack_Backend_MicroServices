@@ -1,7 +1,9 @@
 const Vendor = require('../models/Vendor');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto')
+const crypto = require('crypto');
+const {setCache} = require('../utils/cache')
+const {sendWelcomeEmail,sendForgotPasswordLink} = require('../utils/email')
 const createVendor = async (req, res) => {
     try {
         const{
@@ -35,11 +37,11 @@ const createVendor = async (req, res) => {
         });
 
         await vendor.save();
-        // try {
-        //     await sendWelcomeEmail(email,name);
-        // } catch (error) {
-        //     console.error("Email send failed" , error)
-        // }
+        try {
+            await sendWelcomeEmail(email,name);
+        } catch (error) {
+            console.error("Email send failed" , error)
+        }
 
         res.status(201).json(
             { 
@@ -79,11 +81,11 @@ const loginVendor = async (req, res) => {
             );
         }
         const sessionId = crypto.randomUUID();
-        // await setCache(
-        //     `${vendor.role}:session:${vendor._id}`,
-        //     sessionId,
-        //     1800
-        // )
+        await setCache(
+            `${vendor.role}:session:${vendor._id}`,
+            sessionId,
+            1800
+        )
         const token = jwt.sign(
             {
                 id: vendor._id,
