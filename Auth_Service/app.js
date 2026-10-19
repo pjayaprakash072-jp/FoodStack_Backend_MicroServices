@@ -5,6 +5,7 @@ app.use(express.json());
 
 const vendorRoutes = require('./routes/vendorRoutes')
 const userRoutes = require('./routes/userRoutes')
+const managerRoutes = require('./routes/mangerRoutes')
 app.get('/health',(req,res)=>{
     return res.status(200).json(
         {
@@ -13,7 +14,8 @@ app.get('/health',(req,res)=>{
     )
 })
 
-app.use("/vendor",vendorRoutes);
-app.use("/user",userRoutes)
+app.use("/vendorAuth",vendorRoutes);
+app.use("/userAuth",userRoutes)
+app.use("/managerAuth",managerRoutes)
 
 module.exports = app;
