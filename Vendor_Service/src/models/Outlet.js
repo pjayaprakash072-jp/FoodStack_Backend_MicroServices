@@ -1,0 +1,104 @@
+const mongoose = require('mongoose')
+const outletSchema = new mongoose.Schema(
+    {
+        name:{
+            type:String,
+            required:true,
+            trim:true
+        },
+        description:{
+            type:String,
+            default:""
+        },
+        phone:{
+            type:String,
+            required:true
+        },
+        latitude:String,
+        longitude:String,
+        pincode:{
+            type:String,
+            required:true
+        },
+        address:{
+            type:String,
+            required:true
+        },
+        city:{
+            type:String,
+            required:true 
+        },
+        area:{
+            type:String,
+            required:true 
+        },
+        cuisine:{
+            type:[String],
+            default:[]
+        },
+        foodType:{
+            type:String,
+            enum:["veg","non-veg","both"],
+            default:"both"
+        },
+        openingTime:{
+            type:String,
+            required:true
+        },
+        closingTime:{
+            type:String,
+            required:true
+        },
+        isOpen:{
+            type:Boolean,
+            default:true
+        },
+        status:{
+            type:String,
+            enum:["Active","Inactive"],
+            default:"Active"
+        },
+        image: {
+            url: {
+                type: String,
+                default: ''
+            },
+            public_id: {
+                type: String,
+                default: ''
+            }
+        },
+        vendor:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref:"Vendor",
+            required:true
+        },
+        menuCategories:[
+            {
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"MenuCategory"
+            }
+        ],
+        menuItems:[
+            {
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"MenuItem"
+            }
+        ],
+        orders:[
+            {
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"Order"
+            }
+        ],
+        manager:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Manager"
+        }
+    },
+    {
+        timestamps:true
+    }
+)
+
+module.exports = mongoose.model("Outlet",outletSchema)
