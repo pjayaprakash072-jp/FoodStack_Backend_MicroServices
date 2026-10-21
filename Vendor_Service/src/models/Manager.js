@@ -15,7 +15,6 @@ const outletManagerSchema = new mongoose.Schema(
             required:true
         },
         email:String,
-        password:String,
         outlet:{
             type:mongoose.Schema.Types.ObjectId,
             ref:"Outlet"
@@ -23,10 +22,6 @@ const outletManagerSchema = new mongoose.Schema(
         vendor:{
             type:mongoose.Schema.Types.ObjectId,
             ref:"Vendor"
-        },
-        role:{
-            type:String,
-            default:"manager"
         },
         isAvailable:{
             type:String,
