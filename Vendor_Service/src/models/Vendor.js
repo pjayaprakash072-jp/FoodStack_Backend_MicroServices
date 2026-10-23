@@ -3,7 +3,14 @@ const vendorSchema = new mongoose.Schema(
     {
         authId:{
             type:mongoose.Schema.Types.ObjectId,
-            ref:"VendorAuth"
+            ref:"VendorAuth",
+            required:true,
+            unique:true
+        },
+        role:{
+            type:String,
+            enum:["vendor"],
+            default:"vendor"
         },
         name:{
             type:String,
@@ -15,12 +22,6 @@ const vendorSchema = new mongoose.Schema(
             unique:true,
             required:true,
             trim:true
-        },
-        password:{
-            type:String,
-            required: function(){
-                return this.authProvider === "local"
-            }
         },
         phone:{
             type:String,
