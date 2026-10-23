@@ -1,11 +1,11 @@
-const Manager = require('../models/Manager');
+const Manager = require('../models/ManagerAuth');
 const { setCache } = require('../utils/cache');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs')
 const loginManager = async(req,res)=>{
     try {
         const {phone,password} = req.body;
-        const manager = await Manager.findOne({phone}).populate("outlet");
+        const manager = await Manager.findOne({phone});
         if(!manager){
             return res.status(400).json(
                 {
@@ -21,13 +21,6 @@ const loginManager = async(req,res)=>{
                 }
             )
         }
-        if(!manager.outlet){
-            return res.status(400).json(
-                {
-                    message:"outlet is not assigned for this manager!"
-                }
-            )
-        }
         const sessionId = crypto.randomUUID();
         await setCache(
             `${manager.role}:session:${manager._id}`,
@@ -38,7 +31,6 @@ const loginManager = async(req,res)=>{
             {
                 id:manager._id,
                 role:manager.role,
-                outletId:manager.outlet._id,
                 sessionId
             },
             process.env.JWT_SECRET,
@@ -50,7 +42,7 @@ const loginManager = async(req,res)=>{
             {
                 message:"Manager Logged in successfully!",
                 token,
-                manager
+                managerAuth
             }
         )
     } catch (error) {

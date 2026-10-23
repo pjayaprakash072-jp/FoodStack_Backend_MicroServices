@@ -31,16 +31,6 @@ const userSchema = new mongoose.Schema(
                 return this.authProvider === "local"
             }
         },
-        profileImg:{
-            url:{
-                type:String,
-                default:""
-            },
-            public_id:{
-                type:String,
-                default:""
-            }
-        },
         authProvider:{
             type:String,
             enum:["local","google"],
@@ -62,30 +52,11 @@ const userSchema = new mongoose.Schema(
         emailVerificationExpires:{
             type:Date,
             default:null
-        },
-        cart:[
-            {
-                item:{
-                    type:mongoose.Schema.Types.ObjectId,
-                    ref:"MenuItem"
-                },
-                quantity:{
-                    type:Number,
-                    default:1,
-                    min:1
-                }
-            }
-        ],
-        orders:[
-            {
-                type:mongoose.Schema.Types.ObjectId,
-                ref:"Order"
-            }
-        ]
+        }
     },
     {
         timestamps:true
     }
 )
 
-module.exports = mongoose.model("User",userSchema);
+module.exports = mongoose.model("UserAuth",userSchema);
