@@ -1,11 +1,11 @@
-const User = require('../models/User')
+const User = require('../models/UserAuth')
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto')
-const jwt = require("jsonwebtoken")
 const { sendWelcomeEmail , sendVerificationEmail} = require('../utils/email');
 const {setCache} = require('../utils/cache')
+const jwt = require("jsonwebtoken")
 const sendWhatsAppMessage = require('../utils/whatsapp')
-const createUser = async(req,res)=>{
+const createUserAuth = async(req,res)=>{
     try{
         const {
             name,
@@ -29,14 +29,6 @@ const createUser = async(req,res)=>{
             )
         }
         const hashedPassword = await bcrypt.hash(password,10);
-        const profileImg = req.file?
-        {
-            url:req.file.path,
-            public_id:req.file.filename
-        }:{
-            url:"",
-            public_id:""
-        }
         const verificationToken = crypto.randomBytes(32).toString("hex");
         const verificationTokenExpires = new Date(
             Date.now()+ 10*60*1000
@@ -47,7 +39,6 @@ const createUser = async(req,res)=>{
                 email:email.toLowerCase(),
                 password:hashedPassword,
                 phone,
-                profileImg,
                 authProvider:"local",
                 emailVerificationToken:verificationToken,
                 emailVerificationExpires:verificationTokenExpires
@@ -55,7 +46,8 @@ const createUser = async(req,res)=>{
         )
         await user.save();
         const verificationURL = `${process.env.FRONTEND_URL_CLIENT}/verify-email/${verificationToken}`
-        console.log(verificationURL);
+        console.log("token",verificationToken);
+        console.log("url",verificationURL);
         try{
             await sendVerificationEmail(email,name,verificationURL);
         }catch(err){
@@ -72,7 +64,8 @@ const createUser = async(req,res)=>{
         }
     res.status(201).json(
         {
-            message:"user Created Successfull! Please Verify email",user
+            message:"user Created Successfull! Please Verify email",
+            userAuth:user
         }
     )
     }catch(err){
@@ -143,7 +136,9 @@ const loginUser = async(req,res)=>{
         )
         res.status(200).json(
             {
-                message:"User logged in successfully!",token,user
+                message:"User logged in successfully!",
+                token,
+                userAuth:user
             }
         )
     } catch (error) {
@@ -156,6 +151,7 @@ const loginUser = async(req,res)=>{
         )
     }
 }
+
 const verifyUserEmail = async(req,res)=>{
     try {
         const {verificationToken} = req.params;
@@ -200,7 +196,7 @@ const verifyUserEmail = async(req,res)=>{
     }
 }
 module.exports = {
-    createUser,
+    createUserAuth,
     loginUser,
     verifyUserEmail
 }

@@ -29,25 +29,6 @@ const vendorSchema = new mongoose.Schema(
                 return this.authProvider === "local"
             }
         },
-        businessName:{
-            type:String,
-            default:""
-        },
-        status:{
-            type:String,
-            enum:["active","inactive","suspended"],
-            default:"active"
-        },
-        profileImg:{
-            url: {
-                type: String,
-                default: ''
-            },
-            public_id: {
-                type: String,
-                default: ''
-            }
-        },
         passwordResetToken:{
             type:String,
             default:null
@@ -65,29 +46,11 @@ const vendorSchema = new mongoose.Schema(
             type:String,
             enum:['local','google'],
             default:"local"
-        },
-        outlets:[
-            {
-                type:mongoose.Schema.Types.ObjectId,
-                ref :"Outlet"
-            }
-        ],
-        orders:[
-            {
-                type:mongoose.Schema.Types.ObjectId,
-                ref:"Order"
-            }
-        ],
-        managers:[
-            {
-                type:mongoose.Schema.Types.ObjectId,
-                ref:"Manager"
-            }
-        ]
+        }
     },
     {
         timestamps:true
     }
 )
 
-module.exports = mongoose.model("Vendor",vendorSchema)
+module.exports = mongoose.model("VendorAuth",vendorSchema)
