@@ -5,25 +5,11 @@ const crypto = require("crypto");
 const app = express();
 
 
-const vendorRoutes = require("./routes/vendorRoutes");
-const outletRoutes = require("./routes/outletRoutes");
-const menuCategoryRoutes = require("./routes/menuCategoryRoutes");
-const menuItemRoutes = require("./routes/menuItemRoutes");
-const userRoutes = require('./routes/User/userRoutes')
-const cartRoutes = require("./routes/User/cartRoutes")
-const addressRoutes = require('./routes/User/addressRoutes')
-const orderRoutes = require('./routes/User/orderRoutes')
-const paymentRoutes = require('./routes/User/paymentRoutes')
-const managerRoutes = require('./routes/managerRoutes')
-const vendorAuthRoutes = require('./routes/vendroAuthRoutes')
-const userAuthRoutes = require('./routes/User/userAuthRoutes')
-
-const { redisClient } = require("./config/redis")
-
-
-const INSTANCE_ID = crypto.randomUUID();
-
-const PORT = process.env.PORT || 5000;  
+const vendorRoutes = require("./src/routes/vendorRoutes");
+const outletRoutes = require("./src/routes/outletRoutes");
+const menuCategoryRoutes = require("./src/routes/menuCategoryRoutes");
+const menuItemRoutes = require("./src/routes/menuItemRoutes");
+const managerRoutes = require('./src/routes/managerRoutes')
 
 
 app.use(cors());
