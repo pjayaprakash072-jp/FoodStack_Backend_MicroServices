@@ -1,0 +1,328 @@
+
+
+const Address = require('../../models/User/Address')
+const Order = require('../../models/User/Order')
+const User = require('../../models/User/User')
+const {getMenuItemById} = require('../../service/menuService');
+const {getOutletById} = require('../../service/outletService');
+const createOrder = async(req,res)=>{
+
+    try {
+        const cartItems= Array.isArray(req.body.items)
+        ? req.body.items 
+        : [];
+        if(!cartItems.length) return res.status(400).json(
+            {
+                message:"Cart is empty!"
+            }
+        )
+        const outletId = req.body.outlet
+        const outlet = await getOutletById(outletId);
+        if(!outlet){
+            return res.status(400).json(
+                {
+                    message:"Outlet not foudn to palce order!"
+                }
+            )
+        }
+        //check that each item belongs to this outlet.
+        const outletMenuImteIds = new Set(
+            (outlet.menuItems || []).map(
+                (item)=> String(typeof  item === "object" && item !== null ? item._id : item)
+            )
+        );
+        const requestedIds = cartItems.map(
+            (item)=> String(item._id || "")
+        )
+        if(requestedIds.some(
+            (id)=>!id || !outletMenuImteIds.has(id)
+        )){
+            return res.status(400).json(
+                {
+                    message:"One or more items do not belong to this outlet."
+                }
+            )
+        }
+        const items = [];
+        for(const x of cartItems){
+            const id = x._id;
+            
+            const item = await getMenuItemById(id);
+            if(!item) return res.status(400).json(
+                {
+                    message:"One of the cart item no longer Exists"
+                }
+            )
+            items.push(
+                {
+                    item:item._id,
+                    name:item.name,
+                    price:item.price,
+                    quantity:Math.max(1,Number(x.quantity) ||1)
+                }
+            )
+        }
+        const subTotal = items.reduce(
+            (sum,x)=>{
+                return sum += x.price* x.quantity
+            },0
+        )
+        const deliveryFee = 40;
+        let deliveryAddress = "";
+        if(req.body.addressId){
+            const address = await Address.findOne(
+                {
+                    _id:req.body.addressId,
+                    user:req.userId
+                }
+            )
+            if(address){
+                deliveryAddress = [
+                    address.label,
+                    address.fullName,
+                    address.phone,
+                    address.addressLine1,
+                    address.addressLine2,
+                    address.city,
+                    address.state,
+                    address.pincode
+                ].filter(Boolean).join(", ");
+            }
+        }
+
+        const order = new Order(
+            {
+                user:req.userId,
+                outlet:outletId,
+                vendor:outlet.vendor?._id,
+                items,
+                deliveryAddress,
+                subTotal,
+                deliveryFee,
+                totalAmount:subTotal+deliveryFee,
+                paymentMethod:req.body.paymentMethod,
+                paymentStatus:"pending",
+                orderStatus:"placed"
+            }
+        )
+        const user = await User.findById(req.userId);
+        if(!user){
+            return res.status(400).json(
+                {
+                    message:"User not found to add Order id while creating order."
+                }
+            )
+        }
+        user.orders.push(order._id);
+        await user.save();
+        await order.save();
+        const io = req.app.get("io");
+        if(io){
+            const roomName = `outlet:${outletId}`;
+            io.to(roomName).emit("new-order",
+                {
+                    orderId:order._id,
+                    outletId:outletId,
+                    totalAmount:order.totalAmount,
+                    orderStatus:order.orderStatus,
+                    createdAt:order.createdAt
+                }
+            )
+            console.log(`New Order is emitted to ${roomName}`)
+        }
+        res.status(201).json(
+            {
+                message:"Order placed successfully!",
+                order
+            }
+        )
+    } catch (error) {
+        console.log("Error",error);
+        res.status(500).json(
+            {
+                message:"Internal server Error, Failed to creating Order",
+                error:error.message
+            }
+        )
+    }
+}
+
+const getAllOrdersByUser = async(req,res)=>{
+    try {
+        const orders = await Order.find(
+            {
+                user:req.userId
+            }
+        ).sort(
+            {
+                createdAt :-1
+            }
+        )
+        if(!orders){
+            return res.status(400).json(
+                {
+                    message:"No orders found with this user"
+                }
+            )
+        }
+        res.status(200).json(
+            {
+                message:"orders retrieved successfuly",
+                orders
+            }
+        )
+    } catch (error) {
+        console.log("Error",error);
+        res.status(500).json(
+            {
+                message:"Internal server error, Failed to get all orders",
+                error:error.message
+            }
+        )
+    }
+}
+const getAllOrderByVendor = async (req,res)=>{
+    try {
+        const vendorId = req.vendorId;
+        const orders = await Order.find({vendor:vendorId});
+        if(!orders){
+            return res.status(400).json(
+                {
+                    message:" Orders not found."
+                }
+            )
+        }
+        res.status(200).json(
+            {
+                message:"orders retrieved successfully!",
+                orders
+            }
+        )
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+const getOneOrder = async(req,res)=>{
+    try {
+        const orderId = req.params.orderId;
+        const order = await Order.findOne(
+            {
+                user:req.userId,
+                _id:orderId
+            }
+        )
+        if(!order){
+            return res.status(400).json(
+                {
+                    message:"No orders found with this user"
+                }
+            )
+        }
+        res.status(200).json(
+            {
+                message:"orders retrieved successfuly",
+                order
+            }
+        )
+    } catch (error) {
+        console.log("Error",error);
+        res.status(500).json(
+            {
+                message:"Internal server error, Failed to get all orders",
+                error:error.message
+            }
+        )
+    }
+}
+
+const getOrdersByOutlet = async (req,res)=>{
+    try {
+        const outletId = req.outletId;
+        console.log(outletId)
+        const orders = await Order.find({outlet:outletId})
+        if(!orders){
+            return res.status(400).json(
+                {
+                    message:"Orders not found."
+                }
+            )
+        }
+        res.status(200).json(
+            {
+                messsage:"Orders retrieved succcessfully for the outlet.",
+                orders
+            }
+        )
+        
+    } catch (error) {
+        console.log("Error, while getting the orders by outlet",error);
+        res.status(500).json(
+            {
+                message:"Internal server error, Failed to getOrdersByOutlet",
+                error:error.message
+            }
+        )
+    }
+}
+const updateOrder = async(req,res)=>{
+    try {
+        const orderId = req.params.orderId;
+        const {paymentStatus,orderStatus} = req.body;
+        if(!paymentStatus && !orderStatus) {
+            return res.status(400).json(
+                {
+                    message:"Missing orderStatus Or PaymentStatus"
+                }
+            )
+        }
+        const order = await Order.findById(orderId);
+        if(!order){
+            return res.status(400).json(
+                {
+                    message:"Order not found"
+                }
+            )
+        }
+        if(orderStatus){
+            order.orderStatus = orderStatus;
+        }
+        if(paymentStatus){
+            order.paymentStatus = paymentStatus;
+        }
+        const io = req.app.get("io");
+        await order.save();
+        if(io){
+            const roomName = `order:${order._id}`;
+            io.to(roomName).emit("order-status-updated",{
+                orderId:String(order._id),
+                orderStatus:order.orderStatus,
+                // paymentStatus:order.paymentStatus
+            })
+            console.log(`Order status updated and emitted to ${roomName}`)
+        }
+        res.status(200).json(
+            {
+                message:"Order Updated Successfully!",
+                order
+            }
+        )
+        
+    } catch (error) {
+        console.log("Error, Failed to update Order status",error);
+        res.status(500).json(
+            {
+                message:"Internal server error, Failed to update Order Status",
+            }
+        )
+    }
+}
+
+module.exports ={
+    createOrder,
+    getAllOrdersByUser,
+    getOneOrder,
+    getAllOrderByVendor,
+    getOrdersByOutlet,
+    updateOrder
+}
