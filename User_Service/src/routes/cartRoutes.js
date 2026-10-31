@@ -1,6 +1,6 @@
-const {getCartItems,addCartItem,updateCart,clearCart,removeItem,mergeCart} = require("../../controllers/User/cartController")
-const verifyToken = require('../../middleware/verifyToken')
-const authorizeRoles = require('../../middleware/authorizeRoles')
+const {getCartItems,addCartItem,updateCart,clearCart,removeItem,mergeCart} = require("../controllers/cartController")
+const verifyToken = require('../middleware/verifyToken')
+const authorizeRoles = require('../middleware/authorizeRoles')
 const router = require('express').Router();
 
 router.get('/getall',verifyToken,authorizeRoles("user"),getCartItems);

@@ -1,6 +1,6 @@
-const {createOrder,getAllOrdersByUser,getOneOrder,getAllOrderByVendor,getOrdersByOutlet,updateOrder} = require('../../controllers/User/orderController')
-const verifyToken = require('../../middleware/verifyToken')
-const authorizeRoles = require('../../middleware/authorizeRoles')
+const {createOrder,getAllOrdersByUser,getOneOrder,getAllOrderByVendor,getOrdersByOutlet,updateOrder} = require('../controllers/orderController')
+const verifyToken = require('../middleware/verifyToken')
+const authorizeRoles = require('../middleware/authorizeRoles')
 
 const router = require('express').Router();
 

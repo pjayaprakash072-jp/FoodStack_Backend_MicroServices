@@ -5,10 +5,10 @@ const {
     getOneAddress,
     updateAddress,
     delteAddress
-} = require('../../controllers/User/addressController')
+} = require('../controllers/addressController')
 
-const verifyToken = require('../../middleware/verifyToken')
-const authorizeRoles = require('../../middleware/authorizeRoles')
+const verifyToken = require('../middleware/verifyToken')
+const authorizeRoles = require('../middleware/authorizeRoles')
 
 router.post('/create',verifyToken,authorizeRoles("user"),createAddress);
 router.get('/getall',verifyToken,authorizeRoles("user"),getAddresses);
