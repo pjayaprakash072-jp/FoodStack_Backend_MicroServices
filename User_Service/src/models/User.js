@@ -1,0 +1,74 @@
+const mongoose = require('mongoose')
+const userSchema = new mongoose.Schema(
+    {
+        authId:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"UserAuth",
+            required:true,
+            unique:true
+        },
+        role:{
+            type:String,
+            enum:["user"],
+            default:"user"
+        }
+        ,
+        name:{
+            type:String,
+            required:true,
+            trim:true
+        },
+        email:{
+            type:String,
+            required:true,
+            trim:true,
+            unique:true,
+            lowercase:true
+        },
+        phone:{
+            type:String,
+            required: function(){
+                return this.authProvider === "local"
+            }
+        },
+        profileImg:{
+            url:{
+                type:String,
+                default:""
+            },
+            public_id:{
+                type:String,
+                default:""
+            }
+        },
+        authProvider:{
+            type:String,
+            enum:["local","google"],
+            default:"local"
+        },
+        cart:[
+            {
+                item:{
+                    type:mongoose.Schema.Types.ObjectId,
+                    ref:"MenuItem"
+                },
+                quantity:{
+                    type:Number,
+                    default:1,
+                    min:1
+                }
+            }
+        ],
+        orders:[
+            {
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"Order"
+            }
+        ]
+    },
+    {
+        timestamps:true
+    }
+)
+
+module.exports = mongoose.model("User",userSchema);

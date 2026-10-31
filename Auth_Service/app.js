@@ -3,9 +3,9 @@ const app = express();
 
 app.use(express.json());
 
-const vendorRoutes = require('./routes/vendroAuthRoutes')
-const userRoutes = require('./routes/userAuthRoutes')
-const managerRoutes = require('./routes/mangerRoutes')
+const vendorRoutes = require('./src/routes/vendroAuthRoutes')
+const userRoutes = require('./src/routes/userAuthRoutes')
+const managerRoutes = require('./src/routes/mangerAuthRoutes')
 app.get('/health',(req,res)=>{
     return res.status(200).json(
         {
