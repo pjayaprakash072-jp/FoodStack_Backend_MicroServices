@@ -1,7 +1,7 @@
 
-const Address = require('../models/User/Address')
-const Order = require('../models/User/Order')
-const User = require('../models/User/User')
+const Address = require('../models/Address')
+const Order = require('../models/Order')
+const User = require('../models/User')
 const createRazorpayOrder = require('../utils/razorpay/createRazorpayOrder')
 const verifyRazorpayPayment = require('../utils/razorpay/verifyRazorpayPayment')
 const {getMenuItemById} = require('../service/menuService')

@@ -1,10 +1,10 @@
 
 
-const Address = require('../../models/User/Address')
-const Order = require('../../models/User/Order')
-const User = require('../../models/User/User')
-const {getMenuItemById} = require('../../service/menuService');
-const {getOutletById} = require('../../service/outletService');
+const Address = require('../models/Address')
+const Order = require('../models/Order')
+const User = require('../models/User')
+const {getMenuItemById} = require('../service/menuService');
+const {getOutletById} = require('../service/outletService');
 const createOrder = async(req,res)=>{
 
     try {

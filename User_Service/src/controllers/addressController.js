@@ -1,4 +1,4 @@
-const Address = require("../models/User/Address")
+const Address = require("../models/Address")
 const createAddress = async (req,res)=>{
     try {
         if(req.role != "user"){

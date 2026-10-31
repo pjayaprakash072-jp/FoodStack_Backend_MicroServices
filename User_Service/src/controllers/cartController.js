@@ -1,4 +1,4 @@
-const User = require('../models/User/User')
+const User = require('../models/User')
 const {getMenuItemById} = require('../service/menuService')
 const {getOutletById} = require('../service/outletService');
 const getItemsWithDetails = async (cart)=>{
