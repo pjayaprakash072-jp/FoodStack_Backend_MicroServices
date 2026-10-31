@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const Vendor = require('../models/Vendor');
 const Manager = require('../models/Manager')
 const {getCache} = require('../utils/cache')
+
 const verifyToken = async (req, res, next) => {
 
     const token = req.headers.token;
@@ -10,7 +11,7 @@ const verifyToken = async (req, res, next) => {
         if (!token) {
             return res.status(401).json(
                 {
-                    message: "Access denied. No token provided."
+                    message: "Access denied. No token provided.(vendor)"
                 }
             );
         }
@@ -32,6 +33,7 @@ const verifyToken = async (req, res, next) => {
         const currentSession = await getCache(
             `${decoded.role}:session:${decoded.id}`
         )
+
         if(!currentSession){
             return res.status(401).json(
                 {
@@ -55,16 +57,18 @@ const verifyToken = async (req, res, next) => {
             req.vendor = vendor;
         }
         if(decoded.role ==="manager"){
-            req.managerId = decoded.id;
-            req.outletId = decoded.outletId;
-            req.manager = await Manager.findById(decoded.id);
+            const authId = decoded.id;
+            const manager = await Manager.findOne({authId});
+            req.managerId = manager.id;
+            req.outletId = manager.outlet;
+            req.manager = manager;
         }
         next();
     } catch (error) {
         console.error(error);
         return res.status(403).json(
             {
-                message: "Internal server error, Token is InValid! OR session id is not verified.",
+                message: "Internal server error, Token is InValid! OR session id is not verified.(vendor)",
                 error: error.message
             }
         );
