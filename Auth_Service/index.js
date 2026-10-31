@@ -1,8 +1,8 @@
 const dotEnv = require('dotenv');
 dotEnv.config();
 const app = require('./app')
-const connectDB = require('./config/db');
-const {connectRedis} = require('./config/redis')
+const connectDB = require('./src/config/db');
+const {connectRedis} = require('./src/config/redis')
 const PORT = process.env.PORT || 5000
 
 const startServer =async ()=>{
