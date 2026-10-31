@@ -1,11 +1,6 @@
-const User = require('../../models/User/User')
+const User = require('../models/User/User')
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto')
-const { sendWelcomeEmail , sendVerificationEmail} = require('../../utils/email');
-const {setCache} = require('../../utils/cache')
-const cloudinary = require('../../config/cloudinary')
-const jwt = require("jsonwebtoken")
-const sendWhatsAppMessage = require('../../utils/whatsapp')
+const cloudinary = require('../config/cloudinary')
 const createUser = async(req,res)=>{
     try{
         const authId = req.params.authId;
@@ -29,7 +24,6 @@ const createUser = async(req,res)=>{
                 }
             )
         }
-        // const hashedPassword = await bcrypt.hash(password,10);
         const profileImg = req.file?
         {
             url:req.file.path,
@@ -38,40 +32,17 @@ const createUser = async(req,res)=>{
             url:"",
             public_id:""
         }
-        // const verificationToken = crypto.randomBytes(32).toString("hex");
-        // const verificationTokenExpires = new Date(
-        //     Date.now()+ 10*60*1000
-        // )
         const user = new User(
             {
                 authId,
                 name,
                 email:email.toLowerCase(),
-                // password:hashedPassword,
                 phone,
                 profileImg,
                 authProvider:"local",
-                // emailVerificationToken:verificationToken,
-                // emailVerificationExpires:verificationTokenExpires
             }
         )
         await user.save();
-        // const verificationURL = `${process.env.FRONTEND_URL_CLIENT}/verify-email/${verificationToken}`
-        // console.log(verificationURL);
-        // try{
-        //     await sendVerificationEmail(email,name,verificationURL);
-        // }catch(err){
-        //     console.log("Email send failed",err)
-        // }
-        // //Send Whatsapp message
-        // try {
-        //     if(phone){
-        //         await sendWhatsAppMessage(phone,name);
-        //         console.log("Whatsapp welcome message sent!")
-        //     }
-        // } catch (error) {
-        //     console.log("WhatsApp message failed",error.message)
-        // }
     res.status(201).json(
         {
             message:"user Created Successfull! Please Verify email",user
@@ -83,77 +54,6 @@ const createUser = async(req,res)=>{
             {
                 message:"Internal server Error, Failed to create User/Customer!" , 
                 error:err.message
-            }
-        )
-    }
-}
-
-const loginUser = async(req,res)=>{
-    try {
-        const {email,password} = req.body;
-        const user = await User.findOne({email});
-        if(!user){
-            return res.status(400).json(
-                {
-                    message: "User is not found"
-                }
-            )
-        }
-        if(!user.isVerified){
-            const verificationToken = crypto.randomBytes(32).toString("hex");
-            const verificationTokenExpires = new Date(
-                Date.now()+10*60*1000
-            )
-            user.emailVerificationToken = verificationToken;
-            user.emailVerificationExpires = verificationTokenExpires;
-            user.save();
-            const verificationURL = `${process.env.FRONTEND_URL_CLIENT}/verify-email/${verificationToken}`
-            try{
-                await sendVerificationEmail(email,user.name,verificationURL)
-            }catch(err){
-                console.log("Email sent Failed")
-            }
-            return res.status(400).json(
-                {
-                    message:"Verification link is sent ot your email,Please verify your email before logging in."
-                }
-            )
-        }
-        const isMatch = await bcrypt.compare(password || "",user.password);
-        if(!isMatch){
-            return res.status(401).json(
-                {
-                    message:"Invalid Email or password"
-                }
-            )
-        }
-        const sessionId = crypto.randomUUID();
-        await setCache(
-            `${user.role}:session:${user._id}`,
-            sessionId,
-            3600
-        )
-        const token = jwt.sign(
-            {
-                id:user._id,
-                role:user.role,
-                sessionId:sessionId
-            },process.env.JWT_SECRET,
-            {
-                expiresIn:'1h'
-            }
-        )
-        res.status(200).json(
-            {
-                message:"User logged in successfully!",token,user
-            }
-        )
-    } catch (error) {
-        console.log("Error in User LoginP",error);
-        res.status(500).json(
-            {
-                message:"Internal server Error, Failed to Loding User!",
-                error:error.message
             }
         )
     }
@@ -233,7 +133,6 @@ const getOneUser = async(req,res)=>{
 }
 module.exports = {
     createUser,
-    loginUser,
     updateUser,
     getOneUser
 }
