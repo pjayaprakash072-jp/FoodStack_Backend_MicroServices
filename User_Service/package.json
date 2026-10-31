@@ -20,6 +20,7 @@
     "multer": "^2.5.0",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^10.3.1",
+    "razorpay": "^2.9.8",
     "redis": "^6.3.1"
   },
   "devDependencies": {
