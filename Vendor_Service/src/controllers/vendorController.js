@@ -3,6 +3,7 @@ const Outlet = require('../models/Outlet');
 const MenuCategory = require('../models/MenuCategory');
 const MenuItem = require('../models/MenuItem');
 const cloudinary = require('../config/cloudinary');
+const {sendWelcomeEmail}  =  require('../utils/email')
 const createVendor = async (req, res) => {
     try {
         const authId = req.params.authId;
@@ -35,6 +36,12 @@ const createVendor = async (req, res) => {
         });
 
         await vendor.save();
+        try {
+            await sendWelcomeEmail(email,name);
+        } catch (error) {
+            console.error("Email send failed" , error)
+        }
+
         res.status(201).json(
             { 
                 essage: "Vendor created successfully", 
@@ -53,7 +60,6 @@ const createVendor = async (req, res) => {
     }
 
 }
-
 const getAllVendors = async (req, res) => {
     try {
         const vendors = await Vendor.find();
@@ -171,6 +177,7 @@ const deleteVendor = async (req, res) => {
             await cloudinary.uploader.destroy(vendor.profileImg.public_id);
         }
         await Vendor.findByIdAndDelete(vendorId);
+        console.log("deleted.")
         res.status(200).json(
             { 
                 message: "Vendor deleted successfully", 
@@ -193,6 +200,6 @@ module.exports = {
     getAllVendors,
     getVendorById,
     updateVendor,
-    deleteVendor,
+    deleteVendor
 };
 
