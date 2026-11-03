@@ -1,4 +1,7 @@
 const Manager = require('../models/Manager');
+const {
+    getOutletById_s
+} = require('../service/outletServices')
 const createManager = async(req,res)=>{
     console.log(req.body);
     try {
@@ -15,6 +18,49 @@ const createManager = async(req,res)=>{
         res.status(500).json(
             {
                 message:"Internal server error, Failed to create manager!",
+                error:error.message
+            }
+        )
+    }
+}
+const getManager = async(req,res)=>{
+    try {
+        const {phone} = req.query;
+        let manager;
+        if(phone){
+            manager =await Manager.findOne({phone});
+        }else{
+            const managerId = req.managerId;
+            manager = await Manager.findById(managerId);
+
+        }
+        if(!manager){
+            return res.status(400).json(
+                {
+                    message:"Manager not found, Failet to retrieve manager!"
+                }
+            )
+        }
+        if(!manager.outlet){
+            return res.status(400).json(
+                {
+                    message:"outlet is not assigned for this manager!"
+                }
+            )
+        }
+        const outlet = await getOutletById_s(manager.outlet);
+        const managerWithOutlet = {...manager,outlet:outlet.outlet};
+        res.status(200).json(
+            {
+                message:"Manager record retrieved successfully!",
+                manager:managerWithOutlet
+            }
+        )
+    } catch (error) {
+        console.log("Error, while retrieving manager !", error)
+        res.status(500).json(
+            {
+                message:"Internal server Error, Failed to retrieve manager!",
                 error:error.message
             }
         )
@@ -49,5 +95,6 @@ const updateManager = async (req,res)=>{
 }
 module.exports = {
     createManager,
+    getManager,
     updateManager
 }

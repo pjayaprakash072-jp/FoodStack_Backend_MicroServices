@@ -4,6 +4,7 @@ const authorizeRoles = require('../middleware/authorizeRoles');
 const upload = require('../middleware/upload')
 const {
     createManager,
+    getManager,
     updateManager
 } = require('../controllers/managercontroller');
 const {
@@ -29,6 +30,7 @@ const {
     updateOrder
 } = require('../controllers/orderController')
 router.post('/create',createManager);
+router.get('/get',verifyToken,getManager);
 router.put('/update',verifyToken,authorizeRoles("manager","vendor"),updateManager);
 router.put('/outlet/update',verifyToken,authorizeRoles("manager"),updateOutlet);
 
