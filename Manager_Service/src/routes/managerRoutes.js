@@ -24,6 +24,10 @@ const {
     updateMenuItem,
     deleteMenuItem
 } = require('../controllers/menuItemController')
+const {
+    getOrdersByOutlet,
+    updateOrder
+} = require('../controllers/orderController')
 router.post('/create',createManager);
 router.put('/update',verifyToken,authorizeRoles("manager","vendor"),updateManager);
 router.put('/outlet/update',verifyToken,authorizeRoles("manager"),updateOutlet);
@@ -40,5 +44,8 @@ router.get('/items/category/:categoryId',verifyToken,authorizeRoles("manager"),g
 router.get("/items/get/:menuItemId",verifyToken,authorizeRoles("manager"),getMenuItemById);
 router.post('/items/add/:categoryId',verifyToken,authorizeRoles("manager"),upload.single('image'),createMenuItem);
 router.put("/items/update/:menuItemId",verifyToken,authorizeRoles("manager"),upload.single('image'),updateMenuItem);
-router.delete("/items/delete/:menuItemId",verifyToken,authorizeRoles("manager"),deleteMenuItem)
+router.delete("/items/delete/:menuItemId",verifyToken,authorizeRoles("manager"),deleteMenuItem);
+
+router.get("/orders",verifyToken,authorizeRoles("manager"),getOrdersByOutlet)
+router.put("/order/update/:orderId",verifyToken,authorizeRoles("manager"),updateOrder)
 module.exports = router;
