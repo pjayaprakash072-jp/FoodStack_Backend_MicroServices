@@ -3,9 +3,8 @@ const Vendor = require('../models/Vendor');
 const MenuCategory = require('../models/MenuCategory');
 const MenuItem = require('../models/MenuItem');
 const cloudinary = require('../config/cloudinary');
-const Manager = require('../models/Manager');
 const {getCache , setCache, deleteCache} = require('../utils/cache')
-const {crateManagerAuth} = require('../service/managerService')
+const {crateManagerAuth,crateManager,getManager,updateManager} = require('../service/managerService')
 
 const createOutlet = async (req, res) => {
     try {
@@ -29,7 +28,7 @@ const createOutlet = async (req, res) => {
             phone,
         }
         = req.body;
-        const existsManager = await Manager.findOne({phone});
+        const existsManager = await getManager(phone,req.headers.token);
         if(existsManager){
             return res.status(400).json(
                 {
@@ -68,8 +67,7 @@ const createOutlet = async (req, res) => {
             vendor: vendor._id
         });
         const managerAuth = await crateManagerAuth({name,email,password,phone});
-        console.log(managerAuth);
-        const manager = new Manager(
+        const manager = await crateManager(
             {
                 authId:managerAuth._id,
                 name,
@@ -84,7 +82,6 @@ const createOutlet = async (req, res) => {
         newOutlet.manager = manager._id;
         await vendor.save();
         await newOutlet.save();
-        await manager.save();
         await deleteCache("outlets:all",
                 `outlets:vendor:${newOutlet.vendor}`
             );
@@ -219,8 +216,8 @@ const getOutletsByVendorId = async (req, res) => {
 
 const updateOutlet = async (req, res) => {
     try {
-        const outletId = req.role === "manager"? req.outletId : req.params.id;
-        const {outletName,name,...otherFields} = req.body;
+        const outletId = req.role === "manager"? req.outletId : req.query.id;
+        const {outletName,name,image_m,...otherFields} = req.body;
         const outlet = await Outlet.findById(outletId);
         if (!outlet) {
             return res.status(404).json({ message: "Outlet not found" });
@@ -231,7 +228,10 @@ const updateOutlet = async (req, res) => {
                 await cloudinary.uploader.destroy(outlet.image.public_id);
             }
             //save new cloudinary image details.
-            outlet.image = {
+            outlet.image = image_m?{
+                public_id:image_m.public_id,
+                url:image_m.url
+            }  :{
                 public_id: req.file.filename,
                 url: req.file.path
             }
@@ -329,9 +329,7 @@ const deleteOutlet = async (req, res) => {
                 }
             }
         );
-        const manager = await Manager.findOne({outlet:outletId})
-        manager.outlet= null;
-        await manager.save()
+        await updateManager({remove:outletId},req.headers.token)
 
         // Delete outlet
         await Outlet.findByIdAndDelete(outletId);
