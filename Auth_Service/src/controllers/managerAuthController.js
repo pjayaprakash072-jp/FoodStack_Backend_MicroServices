@@ -106,8 +106,36 @@ const loginManager = async(req,res)=>{
         )
     }
 }
+const getManager = async(req,res)=>{
+    try {
+        const {phone} = req.query;
+        const manager = await Manager.findOne({phone});
+        if(!manager){
+            return res.status(400).json(
+                {
+                    message:"manager not found"
+                }
+            )
+        }
+        return res.status(200).json(
+            {
+                message:"managerAuth retrieved successfull!",
+                managerAuth:manager
+            }
+        )
+    } catch (error) {
+        console.log("Error, Failed to get manager Auth!", error)
+        res.status(500).json(
+            {
+                message:"Internal server Error, Failed to get managerAuth!",
+                error:error.message
+            }
+        )
+    }
+}
 
 module.exports = {
     createManagerAuth,
-    loginManager
+    loginManager,
+    getManager
 }
