@@ -6,7 +6,6 @@ const vendorRoutes = require("./src/routes/vendorRoutes");
 const outletRoutes = require("./src/routes/outletRoutes");
 const menuCategoryRoutes = require("./src/routes/menuCategoryRoutes");
 const menuItemRoutes = require("./src/routes/menuItemRoutes");
-const managerRoutes = require('./src/routes/managerRoutes')
 
 app.use(cors());
 app.use(express.json());
@@ -16,7 +15,6 @@ app.use("/vendor", vendorRoutes);
 app.use("/outlet", outletRoutes);
 app.use("/menu-category", menuCategoryRoutes);
 app.use("/menu-item", menuItemRoutes);
-app.use("/manager",managerRoutes)
 
 app.get('/',(req,res)=>{
     res.send("Welcome to FoodStack!")
