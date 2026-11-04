@@ -1,7 +1,7 @@
 const axios = require("axios");
 const menuService = axios.create(
     {
-        baseURL:process.env.MENU_SERVICE_URL,
+        baseURL:process.env.OUTLET_SERVICE_URL,
         timeout:5000
     }
 );
