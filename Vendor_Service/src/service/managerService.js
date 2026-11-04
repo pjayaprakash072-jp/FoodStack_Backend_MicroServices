@@ -5,22 +5,7 @@ const managerService = axios.create(
         timeout:5000
     }
 );
-const crateManagerAuth = async(payload) => { 
-    console.log("called auth one")
-    try {
-        const response = await managerService.post(
-            "/managerAuth/create",payload
-        )
-        console.log(response);
-        return response.data.managerAuth;
-    } catch (error) {
-        if(error.response?.status === 404 || error.response?.status === 400){
-            console.log(error.response?.data?.message);
-            return null;
-        }
-        throw error;
-    }
-}
+
 const crateManager = async(payload) => { 
     try {
         const response = await managerService.post(
@@ -55,30 +40,7 @@ const updateManager = async(payload,token) => {
         throw error;
     }
 }
-const getManager = async(phone,token) => { 
-    try {
-        const response = await managerService.post(
-            "/managerAuth/get",
-            {
-                headers:{
-                    token
-                },
-                params:{
-                    phone
-                }
-            }
-        )
-        return response.data.managerAuth;
-    } catch (error) {
-        if(error.response?.status === 404 || error.response?.status === 400){
-            return null;
-        }
-        throw error;
-    }
-}
 module.exports = {
-    crateManagerAuth,
     crateManager,
-    getManager,
     updateManager
 }
