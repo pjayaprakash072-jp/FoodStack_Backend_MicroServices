@@ -1,4 +1,5 @@
 const axios = require("axios");
+console.log("RECAPTCHA_SITE_SECRET exists:", !!process.env.RECAPTCHA_SITE_SECRET);
 const verifyCaptcha = async(req,res,next)=>{
     try {
         const {captchaToken} = req.body;
@@ -24,7 +25,6 @@ const verifyCaptcha = async(req,res,next)=>{
                 timeout:5000,
             }
         )
-        // console.log(response);
         if(!response.data.success){
             return res.status(400).json(
                 {
