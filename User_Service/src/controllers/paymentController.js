@@ -6,6 +6,7 @@ const createRazorpayOrder = require('../utils/razorpay/createRazorpayOrder')
 const verifyRazorpayPayment = require('../utils/razorpay/verifyRazorpayPayment')
 const {getMenuItemById} = require('../service/menuService')
 const {getOutletById} = require('../service/outletService');
+const {publishEvent} = require('../events/eventpublisher')
 const createPayment = async(req,res)=>{
     try {
         const cartItems = Array.isArray(req.body.items)? req.body.items:[];
@@ -164,18 +165,27 @@ const verifyPayment = async(req,res)=>{
         user.orders.push(order._id);
         await user.save();
         await order.save();
-        const io = req.app.get("io");
-        if(io){
-            const roomName = `outlet:${outletId}`;
-            io.to(roomName).emit("new-order",{
-                orderId:order._id,
-                outletId:outletId,
-                totalAmount:order.totalAmount,
-                orderStatus:order.orderStatus,
-                createdAt:order.createdAt
-            })
-            console.log(`New Order is emitted to ${roomName}`)
+        const type = "new.order";
+        const data = {
+            orderId:order._id,
+            outletId:outletId,
+            totalAmount:order.totalAmount,
+            orderStatus:order.orderStatus,
+            createdAt:order.createdAt
         }
+        await publishEvent(type,data);
+        // const io = req.app.get("io");
+        // if(io){
+        //     const roomName = `outlet:${outletId}`;
+        //     io.to(roomName).emit("new-order",{
+        //         orderId:order._id,
+        //         outletId:outletId,
+        //         totalAmount:order.totalAmount,
+        //         orderStatus:order.orderStatus,
+        //         createdAt:order.createdAt
+        //     })
+        //     console.log(`New Order is emitted to ${roomName}`)
+        // }
         res.status(200).json(
             {
                 message:"Order placed successfully!",
