@@ -25,7 +25,10 @@ const initializeEventConsumer = async()=>{
             const event = JSON.parse(msg);
             const io = getIo();
             if(event.type === "order.status.updated"){
-                io.to(`outlet:${event.data.orderId}`).emit(`order-status-updated`,event.data);
+                io.to(`order:${event.data.orderId}`).emit(`order-status-updated`,event.data);
+            }
+            if(event.type === "new.order"){
+                io.to(`outlet:${event.data.outletId}`).emit(`new-order`,event.data);
             }
         }
     )
