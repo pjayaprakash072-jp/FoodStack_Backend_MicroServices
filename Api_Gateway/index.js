@@ -38,6 +38,7 @@ app.use(createProxyMiddleware(
     }
 ))
 const server = http.createServer(app);
+initializeSocket(server);
 const PORT = process.env.PORT || 5000;
 const startServer = async()=>{
     try {
