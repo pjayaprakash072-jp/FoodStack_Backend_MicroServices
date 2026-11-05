@@ -5,6 +5,7 @@ const Order = require('../models/Order')
 const User = require('../models/User')
 const {getMenuItemById} = require('../service/menuService');
 const {getOutletById} = require('../service/outletService');
+const {publishEvent} = require('../events/eventpublisher')
 const createOrder = async(req,res)=>{
 
     try {
@@ -116,20 +117,29 @@ const createOrder = async(req,res)=>{
         user.orders.push(order._id);
         await user.save();
         await order.save();
-        const io = req.app.get("io");
-        if(io){
-            const roomName = `outlet:${outletId}`;
-            io.to(roomName).emit("new-order",
-                {
-                    orderId:order._id,
-                    outletId:outletId,
-                    totalAmount:order.totalAmount,
-                    orderStatus:order.orderStatus,
-                    createdAt:order.createdAt
-                }
-            )
-            console.log(`New Order is emitted to ${roomName}`)
+        const type = "new.order";
+        const data = {
+            orderId:order._id,
+            outletId:outletId,
+            totalAmount:order.totalAmount,
+            orderStatus:order.orderStatus,
+            createdAt:order.createdAt
         }
+        await publishEvent(type,data);
+        // const io = req.app.get("io");
+        // if(io){
+        //     const roomName = `outlet:${outletId}`;
+        //     io.to(roomName).emit("new-order",
+        //         {
+        //             orderId:order._id,
+        //             outletId:outletId,
+        //             totalAmount:order.totalAmount,
+        //             orderStatus:order.orderStatus,
+        //             createdAt:order.createdAt
+        //         }
+        //     )
+        //     console.log(`New Order is emitted to ${roomName}`)
+        // }
         res.status(201).json(
             {
                 message:"Order placed successfully!",
@@ -290,17 +300,13 @@ const updateOrder = async(req,res)=>{
         if(paymentStatus){
             order.paymentStatus = paymentStatus;
         }
-        const io = req.app.get("io");
-        await order.save();
-        if(io){
-            const roomName = `order:${order._id}`;
-            io.to(roomName).emit("order-status-updated",{
-                orderId:String(order._id),
-                orderStatus:order.orderStatus,
-                // paymentStatus:order.paymentStatus
-            })
-            console.log(`Order status updated and emitted to ${roomName}`)
+        const type = "order.status.updated";
+        const data = {
+            orderId:order._id,
+            orderStatus:order.orderStatus,
+            // paymentStatus:order.paymentStatus
         }
+        await publishEvent(type,data);
         res.status(200).json(
             {
                 message:"Order Updated Successfully!",
