@@ -19,7 +19,7 @@ const initializeSocket = (server)=>{
             socket.join(roomName);
             console.log(`socket ${socket.id} joined outlet: ${outletId}`)
         })
-        socket.on("outlet-leave",(outletId)=>{
+        socket.on("leave-outlet",(outletId)=>{
             if(!outletId) return;
             const roomName = `outlet:${outletId}`;
             socket.leave(roomName);
