@@ -5,6 +5,7 @@ const Order = require('../models/Order')
 const User = require('../models/User')
 const {getMenuItemById} = require('../service/menuService');
 const {getOutletById} = require('../service/outletService');
+const {publishEvent} = require('../events/eventpublisher')
 const createOrder = async(req,res)=>{
 
     try {
@@ -290,17 +291,13 @@ const updateOrder = async(req,res)=>{
         if(paymentStatus){
             order.paymentStatus = paymentStatus;
         }
-        const io = req.app.get("io");
-        await order.save();
-        if(io){
-            const roomName = `order:${order._id}`;
-            io.to(roomName).emit("order-status-updated",{
-                orderId:String(order._id),
-                orderStatus:order.orderStatus,
-                // paymentStatus:order.paymentStatus
-            })
-            console.log(`Order status updated and emitted to ${roomName}`)
+        const type = "order.status.updated";
+        const data = {
+            orderId:order._id,
+            orderStatus:order.orderStatus,
+            // paymentStatus:order.paymentStatus
         }
+        await publishEvent(type,data);
         res.status(200).json(
             {
                 message:"Order Updated Successfully!",
