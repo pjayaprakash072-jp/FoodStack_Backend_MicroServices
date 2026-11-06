@@ -1,0 +1,67 @@
+const mongoose = require('mongoose')
+
+const addressSchema = new mongoose.Schema(
+    {
+        label:{
+            type:String,
+            enum:["Home","Work","Other"],
+            default:"Home"
+        },
+        fullName:{
+            type:String,
+            required:true,
+            trim:true
+        },
+        phone:{
+            type:String,
+            required:true,
+            trim:true
+        },
+        addressLine1:{
+            type:String,
+            required:true,
+            trim:true
+        },
+        addressLine2:{
+            type:String,
+            default:"",
+            trim:true
+        },
+        city:{
+            type:String,
+            required:true,
+            trim:true
+        },
+        state:{
+            type:String,
+            required:true,
+            trim:true
+        },
+        pincode:{
+            type:String,
+            required:true,
+            trim:true
+        },
+        latitude:{
+            type:Number,
+            required:true
+        },
+        longitude:{
+            type:Number,
+            required:true
+        },
+        isDefault:{
+            type:Boolean,
+            default:false
+        },
+        user:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"User",
+            required:true
+        }
+    },
+    {
+        timestamps:true
+    }
+)
+module.exports = mongoose.model("Address",addressSchema);
