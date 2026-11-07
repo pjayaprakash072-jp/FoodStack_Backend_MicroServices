@@ -1,9 +1,13 @@
+const app = require('../app')
+
+module.exports = app;
+
 const express = require('express');
 const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors());
-const emailRoutes = require('../src/routes/emialRoutes');
+const emailRoutes = require('./src/routes/emialRoutes');
 
 app.use('/email',emailRoutes);
 app.get('/',(req,res)=>{
