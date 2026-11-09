@@ -3,7 +3,11 @@ const Category = require("../models/MenuCategory");
 const Outlet = require('../models/Outlet')
 const cloudinary = require('../config/cloudinary');
 const Vendor = require('../models/Vendor')
-const {getCache,setCache,deleteCache} = require('../utils/cache')
+const {
+    getCache,
+    setCache,
+    deleteCache
+} = require('../utils/cache')
 
 const createMenuItem = async (req, res) => {
     // console.log(req.body)
@@ -18,7 +22,8 @@ const createMenuItem = async (req, res) => {
             discount,
             foodType,
             preparationTime,
-            isAvailable
+            isAvailable,
+            image_m
         }
         = req.body;
         const category = await Category.findById(categoryId);
@@ -42,7 +47,10 @@ const createMenuItem = async (req, res) => {
         ?{
             url:req.file.path,
             public_id:req.file.filename
-        }:{
+        }:image_m?{
+            url:image_m.url,
+            public_id:image_m.public_id
+        } :{
             url:"",
             public_id:""
         }
@@ -168,7 +176,7 @@ const getMenuItemById = async (req, res) => {
 
 const getMenuitemsByOutlet = async (req, res) => {
     try {
-        const outletId = req.role === "manager"? req.outletId : req.query.outletId;
+        const outletId =  req.query.outletId;
         const cacheKey =`menuItems:outlet:${outletId}`;
         const cachedItems = await getCache(cacheKey);
         if(cachedItems){
@@ -255,6 +263,7 @@ const getMenuItemsByCategory = async (req, res) => {
 const updateMenuItem = async (req, res) => {
     // console.log(req.body);
     try{
+        const {image_m,...otherFields} = req.body;
         const menuItemId = req.params.menuItemId;
         const menuItem = await MenuItem.findById(menuItemId).populate(
             {
@@ -270,12 +279,15 @@ const updateMenuItem = async (req, res) => {
             );
         }
         // If new image is uploaded, delete the old image from cloudinary
-        if(req.file){
+        if(req.file || image_m){
             if(menuItem.image?.public_id){
                 await cloudinary.uploader.destroy(menuItem.image.public_id);
             }
             //save new cloudinary image details.
-            menuItem.image = {
+            menuItem.image =image_m ?{
+                public_id:image_m.public_id,
+                url:image_m.url
+            }: {
                 public_id: req.file.filename,
                 url: req.file.path
             }
@@ -289,7 +301,7 @@ const updateMenuItem = async (req, res) => {
                 vendorId:menuItem.outlet.vendor
             }
         )
-        Object.assign(menuItem,req.body);
+        Object.assign(menuItem,otherFields);
         await menuItem.save();
         res.status(200).json(
             {
