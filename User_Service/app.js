@@ -23,7 +23,7 @@ app.use("/payment",paymentRoutes);
 
 // HOME route.
 app.get('/',(req,res)=>{
-    res.send("Welcome to FoodStack!")
+    res.send("User services is working...!")
 })
 // health Check.
 

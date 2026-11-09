@@ -3,8 +3,10 @@
 const Address = require('../models/Address')
 const Order = require('../models/Order')
 const User = require('../models/User')
-const {getMenuItemById} = require('../service/menuService');
-const {getOutletById} = require('../service/outletService');
+const {
+    getOutletById,
+    getMenuItemById
+} = require('../service/outletService');
 const {publishEvent} = require('../events/eventpublisher')
 const createOrder = async(req,res)=>{
 
@@ -277,7 +279,7 @@ const getOrdersByOutlet = async (req,res)=>{
 }
 const updateOrder = async(req,res)=>{
     try {
-        const orderId = req.params.orderId;
+        const orderId = req.query.orderId;
         const {paymentStatus,orderStatus} = req.body;
         if(!paymentStatus && !orderStatus) {
             return res.status(400).json(
