@@ -13,6 +13,9 @@ app.get('/health',(req,res)=>{
         }
     )
 })
+app.get('/',(req,res)=>{
+    return res.send("Authentication service is working...")
+})
 
 app.use("/vendorAuth",vendorRoutes);
 app.use("/userAuth",userRoutes)

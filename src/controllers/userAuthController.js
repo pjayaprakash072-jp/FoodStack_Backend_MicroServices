@@ -1,10 +1,16 @@
 const User = require('../models/UserAuth')
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto')
-const { sendWelcomeEmail , sendVerificationEmail} = require('../utils/email');
+const { 
+    sendWelcomeEmail, 
+    sendVerificationEmail} = require('../utils/email');
 const {setCache} = require('../utils/cache')
 const jwt = require("jsonwebtoken")
 const sendWhatsAppMessage = require('../utils/whatsapp')
+const {
+    createUser,
+    getUser
+} = require('../services/userService')
 const createUserAuth = async(req,res)=>{
     try{
         const {
@@ -24,7 +30,7 @@ const createUserAuth = async(req,res)=>{
         if(existingUser){
             return res.status(400).json(
                 {
-                    message:"User with this email already Existe."
+                    message:"User with this email already Exists."
                 }
             )
         }
@@ -44,10 +50,9 @@ const createUserAuth = async(req,res)=>{
                 emailVerificationExpires:verificationTokenExpires
             }
         )
+        const response = await createUser({name,email,phone},user._id);
         await user.save();
         const verificationURL = `${process.env.FRONTEND_URL_CLIENT}/verify-email/${verificationToken}`
-        console.log("token",verificationToken);
-        console.log("url",verificationURL);
         try{
             await sendVerificationEmail(email,name,verificationURL);
         }catch(err){
@@ -55,17 +60,20 @@ const createUserAuth = async(req,res)=>{
         }
         //Send Whatsapp message
         try {
-            if(phone){
-                await sendWhatsAppMessage(phone,name);
-                console.log("Whatsapp welcome message sent!")
-            }
+            // if(phone){
+            //     await sendWhatsAppMessage(phone,name);
+            //     console.log("Whatsapp welcome message sent!")
+            // }
+            await sendWelcomeEmail(email,name);
         } catch (error) {
-            console.log("WhatsApp message failed",error.message)
+            // console.log("WhatsApp message failed",error.message)
+            console.log("Failed to sent welcome messsage",error.message)
+
         }
     res.status(201).json(
         {
             message:"user Created Successfull! Please Verify email",
-            userAuth:user
+            user:response.user
         }
     )
     }catch(err){
@@ -134,11 +142,19 @@ const loginUser = async(req,res)=>{
                 expiresIn:'1h'
             }
         )
+        const fetchUser = await getUser(token);
+        if(!fetchUser || !fetchUser.user){
+            return res.status(400).json(
+                {
+                    message:" User profile not found!"
+                }
+            )
+        }
         res.status(200).json(
             {
                 message:"User logged in successfully!",
                 token,
-                userAuth:user
+                user:fetchUser.user
             }
         )
     } catch (error) {
@@ -195,8 +211,43 @@ const verifyUserEmail = async(req,res)=>{
         )
     }
 }
+const updateUserAuth = async(req,res)=>{
+    try {
+        const id = req.authId;
+        const userAuth = await User.findById(id);
+        if(!userAuth){
+            return res.status(400).json(
+                {
+                    message:"UserAuth not found!"
+                }
+            )
+        }
+        const {password, ...otherFields} = req.body;
+        Object.assign(userAuth,otherFields);
+        if(password){
+            const hashedPassword = await bcrypt.hash(password,10);
+            userAuth.password = hashedPassword;
+        }
+        await userAuth.save();
+        res.status(200).json(
+            {
+                message:"usrAuth updated successfully!",
+                userAuth
+            }
+        )
+    } catch (error) {
+        console.log("Failed to update UserAuth",error);
+        res.status(500).json(
+            {
+                message:"Internal server error, Failed to update Userauth",
+                error:error.message
+            }
+        )
+    }
+}
 module.exports = {
     createUserAuth,
     loginUser,
-    verifyUserEmail
+    verifyUserEmail,
+    updateUserAuth
 }

@@ -4,8 +4,15 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto')
 const {setCache} = require("../utils/cache")
 const Vendor = require("../models/VendorAuth")
-const {sendWelcomeEmail,sendForgotPasswordLink} = require('../utils/email')
-const {OAuth2Client } = require('google-auth-library')
+const {
+    sendWelcomeEmail,
+    sendForgotPasswordLink
+} = require('../utils/email')
+const {OAuth2Client } = require('google-auth-library');
+const {
+    createVendor,
+    getVendor
+} = require('../services/vendorService')
 const googleClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID
 )
@@ -16,6 +23,7 @@ const createVendorAuth = async (req, res) => {
             email,
             password,
             phone,
+            businessName,
         } = req.body;
         const existingVendor = await Vendor.findOne({ email });
         if (existingVendor) {
@@ -29,7 +37,13 @@ const createVendorAuth = async (req, res) => {
             password: hashedPassword,
             authProvider: "local"
         });
-
+        const payload = {
+            name,
+            email,
+            phone,
+            businessName,
+        }
+        const response = await createVendor(payload, vendor._id);
         await vendor.save();
         try {
             await sendWelcomeEmail(email,name);
@@ -40,7 +54,7 @@ const createVendorAuth = async (req, res) => {
         res.status(201).json(
             { 
                 essage: "Vendor created successfully", 
-                vendorAuth:vendor
+                vendor:response.vendor
             }
         );
     }
@@ -58,7 +72,11 @@ const createVendorAuth = async (req, res) => {
 
 const googleLogin = async(req,res)=>{
     try{
-        const{credential} = req.body;
+        const{
+            credential,
+            phone,
+            businessName,
+        } = req.body;
         if(!credential){
             return res.status(400).json(
                 {
@@ -80,7 +98,6 @@ const googleLogin = async(req,res)=>{
             sub:googleId,
             email,
             name,
-            
             email_verified
         }=payload
 
@@ -99,7 +116,13 @@ const googleLogin = async(req,res)=>{
                 email:email.toLowerCase()
             }
         )
-
+        if(!vendor && !phone){
+            return res.status(200).json(
+                {
+                    no:"vendor not registered."
+                }
+            )
+        }
         if(!vendor){
             vendor = new Vendor(
                 {
@@ -110,7 +133,19 @@ const googleLogin = async(req,res)=>{
                     
                 }
             )
+            const payload = {
+                name,
+                email,
+                phone,
+                businessName,
+            }
+            await createVendor(payload, vendor._id);
             await vendor.save();
+            try{
+                await sendWelcomeEmail(email,name);
+            }catch(err){
+                console.log("Failed to send Welcome email" , err);
+            }
         }else{
             if(!vendor.googleId){
                 vendor.googleId = googleId;
@@ -120,10 +155,9 @@ const googleLogin = async(req,res)=>{
         }
         // create jwt for frontend inclueding sessionId to prevent multiple tabs.
 
+        const responseVendor = await getVendor(email);
+
         const sessionId = crypto.randomUUID();
-        // await redisClient.set(
-        //     `vendor:session:${vendor._id}`,sessionId, { EX:1800}
-        // )
         const cacheKey = `${vendor.role}:session:${vendor._id}`;
         await setCache(cacheKey,sessionId,1800)
         const token = jwt.sign(
@@ -138,16 +172,11 @@ const googleLogin = async(req,res)=>{
             }
         )
 
-        try{
-            sendWelcomeEmail(email,name);
-        }catch(err){
-            console.log("Failed to send Welcome email" , err);
-        }
         return res.status(200).json(
             {
                 message:"Google login successful",
                 token,
-                vendorAuth:vendor
+                vendor:responseVendor.vendor
             }
         )
     }catch(err){
@@ -155,7 +184,7 @@ const googleLogin = async(req,res)=>{
         return res.status(500).json(
             {
                 message:"Internal server error, Failed Google Login!",
-                error:eror.message
+                error:err.message
             }
         )
     }
@@ -195,11 +224,12 @@ const loginVendor = async (req, res) => {
                 expiresIn: '1h'
             }
         );
+        const existVendor = await getVendor(email);
         res.status(200).json(
             { 
                 message: "Vendor logged in successfully", 
                 token, 
-                vendorAuth:vendor
+                vendor:existVendor.vendor
             }
         );
     } catch (error) {
@@ -213,7 +243,7 @@ const loginVendor = async (req, res) => {
     }
 };
 const updateVendorAuth =  async(req,res)=>{
-    console.log(req.body)
+    console.log("update vendor",req.body)
     try {
         const authId = req.authId;
         const vendor = await Vendor.findById(authId);
@@ -359,7 +389,7 @@ const resetPassword = async (req,res)=>{
 const deleteVendorAuth = async (req,res)=>{
     try {
         const authId = req.authId;
-        const vendor = await Vendor.findById(authId);
+        const vendor = await Vendor.findByIdAndDelete(authId);
         if(!vendor){
             return res.status(400).json(
                 {
@@ -367,7 +397,6 @@ const deleteVendorAuth = async (req,res)=>{
                 }
             )
         }
-        await Vendor.findByIdAndDelete(authId);
         res.status(200).json(
             {
                 message:"vendorAuth deleted Successfully"
