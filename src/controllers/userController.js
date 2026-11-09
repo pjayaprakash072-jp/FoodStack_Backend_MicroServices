@@ -1,9 +1,12 @@
 const User = require('../models/User')
 const bcrypt = require('bcryptjs');
 const cloudinary = require('../config/cloudinary')
+const {
+    updateAuthUser
+} = require('../service/userAuthService')
 const createUser = async(req,res)=>{
     try{
-        const authId = req.params.authId;
+        const authId = req.query.authId;
         const {
             name,
             email,
@@ -24,28 +27,20 @@ const createUser = async(req,res)=>{
                 }
             )
         }
-        const profileImg = req.file?
-        {
-            url:req.file.path,
-            public_id:req.file.filename
-        }:{
-            url:"",
-            public_id:""
-        }
         const user = new User(
             {
                 authId,
                 name,
                 email:email.toLowerCase(),
                 phone,
-                profileImg,
                 authProvider:"local",
             }
         )
         await user.save();
     res.status(201).json(
         {
-            message:"user Created Successfull! Please Verify email",user
+            message:"user Created Successfull! Please Verify email",
+            user
         }
     )
     }catch(err){
@@ -85,6 +80,7 @@ const updateUser = async(req,res)=>{
             const hashedPassword = await bcrypt.hash(password,10);
             user.password = hashedPassword;
         }
+        await updateAuthUser(otherFields,req.headers.token);
         await user.save();
         const userResponse = user.toObject();
         delete user.password;
@@ -106,8 +102,8 @@ const updateUser = async(req,res)=>{
 }
 const getOneUser = async(req,res)=>{
     try {
-        const authId = req.params.authId;
-        const user = await User.findOne({authId});
+        const userId = req.userId;
+        const user = await User.findById(userId);
         if(!user){
             return res.status(400).json(
                 {

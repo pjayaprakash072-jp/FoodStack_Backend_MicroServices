@@ -4,8 +4,10 @@ const Order = require('../models/Order')
 const User = require('../models/User')
 const createRazorpayOrder = require('../utils/razorpay/createRazorpayOrder')
 const verifyRazorpayPayment = require('../utils/razorpay/verifyRazorpayPayment')
-const {getMenuItemById} = require('../service/menuService')
-const {getOutletById} = require('../service/outletService');
+const {
+    getOutletById,
+    getMenuItemById
+} = require('../service/outletService');
 const {publishEvent} = require('../events/eventpublisher')
 const createPayment = async(req,res)=>{
     try {

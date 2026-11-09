@@ -18,4 +18,20 @@ const getOutletById = async(id)=>{
         throw error;
     }
 }
-module.exports = {getOutletById};
+const getMenuItemById = async(id) => { 
+    try {
+        const response = await menuService.get(
+            `/menu-item/get/${id}`
+        )
+        return response.data.menuItem;
+    } catch (error) {
+        if(error.response?.status === 404){
+            return null;
+        }
+        throw error;
+    }
+}
+module.exports = {
+    getOutletById,
+    getMenuItemById
+};
