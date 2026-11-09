@@ -3,11 +3,11 @@ const Manager = require('../models/Manager');
 const {getCache} = require('../utils/cache')
 const verifyToken = async(req,res,next)=>{
     try {
-        const token = req.headers.tonek;
+        const token = req.headers.token;
         if(!token){
             return res.status(400).json(
                 {
-                    message:"Access denied. No token provided!"
+                    message:"Access denied. No token provided!(MANAGER)"
                 }
             )
         }

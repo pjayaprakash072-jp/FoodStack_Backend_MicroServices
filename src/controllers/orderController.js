@@ -1,7 +1,7 @@
 const {
     getOrdersByOutlet_s,
     updateOrder_s
-} = require('../service/outletServices');
+} = require('../service/userService');
 
 const getOrdersByOutlet = async(req,res)=>{
     try {
@@ -33,13 +33,6 @@ const updateOrder = async(req,res)=>{
         const token = req.headers.token;
         const id = req.params.orderId;
         let payload = req.body;
-        if(req.file){
-            const image_m = {
-                url:req.file.path,
-                public_id:req.file.filename
-            }
-            payload = {...payload,image_m};
-        }
         const result = await updateOrder_s(payload,id,token);
         res.status(200).json(
             {
