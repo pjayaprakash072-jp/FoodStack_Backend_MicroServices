@@ -39,6 +39,7 @@ const createMenuCategory = async(req,res)=>{
             }
             payload = {...payload,image_m};
         }
+        console.log(payload);
         const result = await createMenuCategory_s(payload,outletId,token);
         res.status(200).json(
             {
@@ -91,6 +92,7 @@ const updateMenuCategory = async(req,res)=>{
             }
             payload = {...payload,image_m};
         }
+        console.log(payload);
         const id = req.params.id;
         const result = await updateMenuCategory_s(payload,id,token);
         res.status(200).json(

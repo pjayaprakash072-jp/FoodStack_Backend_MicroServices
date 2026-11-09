@@ -7,5 +7,8 @@ app.use(express.urlencoded({extended:true}));
 
 const managerRoutes = require('./src/routes/managerRoutes')
 app.use('/manager',managerRoutes);
+app.get('/',(req,res)=>{
+    return res.send("Manager service is working....")
+})
 
 module.exports = app;
